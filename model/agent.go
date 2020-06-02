@@ -54,3 +54,14 @@ func (AgentDAO) List(_offset int64, _count int64) ([]*Agent, error) {
 	res := db.Offset(_offset).Limit(_count).Order("created_at desc").Find(&agents)
 	return agents, res.Error
 }
+
+func (AgentDAO) Count() (int64, error) {
+	db, err := openSqlDB()
+	if nil != err {
+		return 0, err
+	}
+	defer closeSqlDB(db)
+	count := int64(0)
+	res := db.Model(&Agent{}).Count(&count)
+	return count, res.Error
+}

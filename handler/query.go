@@ -30,6 +30,12 @@ func (this *Query) Agent(_ctx context.Context, _req *proto.QueryAgentRequest, _r
 		return err
 	}
 
+	total, err := dao.Count()
+	if nil != err {
+		return err
+	}
+	_rsp.Total = total
+
 	_rsp.Agent = make([]*proto.Agent, len(agents))
 	for i := 0; i < len(agents); i++ {
 		_rsp.Agent[i] = &proto.Agent{
