@@ -31,6 +31,7 @@ call:
 	MICRO_REGISTRY=consul micro call omo.msa.analytics Record.Wake '{"serialNumber":"Z0000001", "softwareFamily":"Test", "softwareVersion": "1.0.0", "systemFamily": "Alpine", "systemVersion": "3.11", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile"}'
 	MICRO_REGISTRY=consul micro call omo.msa.analytics Query.Agent '{"offset":0, "count":60}'
 	MICRO_REGISTRY=consul micro call omo.msa.analytics Record.Wake '{"serialNumber":"Z0000001", "softwareFamily":"Test", "softwareVersion": "1.1.0", "systemFamily": "Alpine", "systemVersion": "3.12", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile2"}'
+	MICRO_REGISTRY=consul micro call omo.msa.analytics Record.Wake '{"serialNumber":"Z0000002", "softwareFamily":"Test", "softwareVersion": "1.1.0", "systemFamily": "Alpine", "systemVersion": "3.12", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile2"}'
 	MICRO_REGISTRY=consul micro call omo.msa.analytics Query.Agent '{"offset":0, "count":60}'
 
 .PHONY: dist

@@ -6,9 +6,9 @@ type Agent struct {
 	ID              string `gorm:"primary_key"`
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
-	SoftwareFamily  string `gorm:"column:software_family;type:varchar(128);not null;unique"`
+	SerialNumber    string `gorm:"column:serial_number;type:varchar(128);not null;unique"`
+	SoftwareFamily  string `gorm:"column:software_family;type:varchar(128);not null"`
 	SoftwareVersion string `gorm:"column:software_version;type:varchar(128)"`
-	SerialNumber    string `gorm:"column:serial_number;type:varchar(128);not null"`
 	SystemFamily    string `gorm:"column:system_family;type:varchar(128)"`
 	SystemVersion   string `gorm:"column:system_version;type:varchar(128)"`
 	DeviceModel     string `gorm:"column:device_model;type:varchar(128)"`
