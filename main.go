@@ -34,6 +34,7 @@ func main() {
 	service.Init()
 
 	// Register Handler
+	proto.RegisterHealthyHandler(service.Server(), new(handler.Healthy))
 	proto.RegisterRecordHandler(service.Server(), new(handler.Record))
 	proto.RegisterQueryHandler(service.Server(), new(handler.Query))
 

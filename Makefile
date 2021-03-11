@@ -28,11 +28,16 @@ clean:
 .PHONY: call
 TOKEN := $(shell cat /tmp/msa-token)
 call:
-	MICRO_REGISTRY=consul micro call omo.msa.analytics Record.Wake '{"serialNumber":"Z0000001", "softwareFamily":"Test", "softwareVersion": "1.0.0", "systemFamily": "Alpine", "systemVersion": "3.11", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile"}'
-	MICRO_REGISTRY=consul micro call omo.msa.analytics Query.Agent '{"offset":0, "count":60}'
-	MICRO_REGISTRY=consul micro call omo.msa.analytics Record.Wake '{"serialNumber":"Z0000001", "softwareFamily":"Test", "softwareVersion": "1.1.0", "systemFamily": "Alpine", "systemVersion": "3.12", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile2"}'
-	MICRO_REGISTRY=consul micro call omo.msa.analytics Record.Wake '{"serialNumber":"Z0000002", "softwareFamily":"Test", "softwareVersion": "1.1.0", "systemFamily": "Alpine", "systemVersion": "3.12", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile2"}'
-	MICRO_REGISTRY=consul micro call omo.msa.analytics Query.Agent '{"offset":0, "count":60}'
+	MICRO_REGISTRY=consul micro call omo.api.msa.analytics Healthy.Echo '{"msg":"hello"}'
+	MICRO_REGISTRY=consul micro call omo.api.msa.analytics Record.Wake '{"serialNumber":"Z0000001", "softwareFamily":"Test", "softwareVersion": "1.0.0", "systemFamily": "Alpine", "systemVersion": "3.11", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile"}'
+	MICRO_REGISTRY=consul micro call omo.api.msa.analytics Query.Agent '{"offset":0, "count":60}'
+	MICRO_REGISTRY=consul micro call omo.api.msa.analytics Record.Wake '{"serialNumber":"Z0000001", "softwareFamily":"Test", "softwareVersion": "1.1.0", "systemFamily": "Alpine", "systemVersion": "3.12", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile2"}'
+	MICRO_REGISTRY=consul micro call omo.api.msa.analytics Record.Wake '{"serialNumber":"Z0000002", "softwareFamily":"Test", "softwareVersion": "1.1.0", "systemFamily": "Alpine", "systemVersion": "3.12", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile2"}'
+	MICRO_REGISTRY=consul micro call omo.api.msa.analytics Query.Agent '{"offset":0, "count":60}'
+
+.PHONY: post
+post:
+	curl -X POST -d '{"msg":"hello"}' 127.0.0.1:8080/msa/analytics/Healthy/Echo
 
 .PHONY: dist
 dist:
