@@ -2,10 +2,11 @@ package handler
 
 import (
 	"context"
-	"omo-msa-analytics/model"
+	"encoding/json"
+	"ogm-msa-analytics/model"
 
 	"github.com/micro/go-micro/v2/logger"
-	proto "github.com/xtech-cloud/omo-msp-analytics/proto/analytics"
+	proto "github.com/xtech-cloud/ogm-msp-analytics/proto/analytics"
 )
 
 type Query struct{}
@@ -24,7 +25,7 @@ func (this *Query) Agent(_ctx context.Context, _req *proto.QueryAgentRequest, _r
 		count = _req.Count
 	}
 
-	dao := model.NewAgentDAO()
+	dao := model.NewAgentDAO(nil)
 	agents, err := dao.List(offset, count)
 	if nil != err {
 		return err
@@ -49,5 +50,39 @@ func (this *Query) Agent(_ctx context.Context, _req *proto.QueryAgentRequest, _r
 			Profile:         agents[i].Profile,
 		}
 	}
+	return nil
+}
+
+func (this *Query) Event(_ctx context.Context, _req *proto.QueryEventRequest, _rsp *proto.QueryEventResponse) error {
+	logger.Infof("Received Query.Event, request is %v", _req)
+	_rsp.Status = &proto.Status{}
+
+	dao := model.NewActivityDAO(nil)
+	query := &model.ActivityQuery{
+		Offset:     _req.Offset,
+		Count:      _req.Count,
+		StartTime:  _req.StartTime,
+		EndTime:    _req.EndTime,
+		AppID:      _req.AppID,
+		DeviceID:   _req.DeviceID,
+		UserID:     _req.UserID,
+		EventID:    _req.EventID,
+		EventKey:   _req.EventKey,
+		EventValue: _req.EventValue,
+	}
+	activityAry, err := dao.List(query)
+	if nil != err {
+		return err
+	}
+
+	// TODO use template
+	content, err := json.Marshal(activityAry)
+	if nil != err {
+		_rsp.Status.Code = 2
+		_rsp.Status.Message = err.Error()
+		return nil
+	}
+
+	_rsp.Content = string(content)
 	return nil
 }

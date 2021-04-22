@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"gorm.io/gorm/clause"
+	"time"
+)
 
 type Agent struct {
 	ID              string `gorm:"primary_key"`
@@ -17,50 +20,39 @@ type Agent struct {
 }
 
 func (Agent) TableName() string {
-	return "msa_analytics_agent"
+	return "ogm_analytics_agent"
 }
 
 type AgentDAO struct {
+	conn *Conn
 }
 
-func NewAgentDAO() *AgentDAO {
-	return &AgentDAO{}
-}
-
-func (AgentDAO) Upset(_agent *Agent) error {
-	db, err := openSqlDB()
-	if nil != err {
-		return err
+func NewAgentDAO(_conn *Conn) *AgentDAO {
+	conn := DefaultConn
+	if nil != _conn {
+		conn = _conn
 	}
-	defer closeSqlDB(db)
-
-	if db.NewRecord(_agent) {
-		// 插入
-		return db.Create(_agent).Error
-	} else {
-		// 更新
-		return db.Save(_agent).Error
+	return &AgentDAO{
+		conn: conn,
 	}
 }
 
-func (AgentDAO) List(_offset int64, _count int64) ([]*Agent, error) {
-	db, err := openSqlDB()
-	if nil != err {
-		return nil, err
-	}
-	defer closeSqlDB(db)
+func (this *AgentDAO) Upsert(_agent *Agent) error {
+	db := this.conn.DB
+	return db.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(_agent).Error
+}
 
+func (this *AgentDAO) List(_offset int64, _count int64) ([]*Agent, error) {
+	db := this.conn.DB
 	var agents []*Agent
-	res := db.Offset(_offset).Limit(_count).Order("created_at desc").Find(&agents)
+	res := db.Offset(int(_offset)).Limit(int(_count)).Order("created_at desc").Find(&agents)
 	return agents, res.Error
 }
 
-func (AgentDAO) Count() (int64, error) {
-	db, err := openSqlDB()
-	if nil != err {
-		return 0, err
-	}
-	defer closeSqlDB(db)
+func (this *AgentDAO) Count() (int64, error) {
+	db := this.conn.DB
 	count := int64(0)
 	res := db.Model(&Agent{}).Count(&count)
 	return count, res.Error
