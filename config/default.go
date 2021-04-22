@@ -15,7 +15,7 @@ database:
         address: 127.0.0.1:3306
         user: root
         password: mysql@OMO
-        db: ogm_analytics
+        db: ogm
     sqlite:
         path: /tmp/ogm-analytics.db
 `
