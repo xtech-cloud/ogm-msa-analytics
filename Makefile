@@ -4,7 +4,7 @@ BUILD_TIME      := $(shell date "+%F %T")
 COMMIT_SHA1     := $(shell git rev-parse HEAD )
 
 .PHONY: build
-build: 
+build:
 	go build -ldflags \
 		"\
 		-X 'main.BuildVersion=${BUILD_VERSION}' \
@@ -14,36 +14,41 @@ build:
 		-o ./bin/${APP_NAME}
 
 .PHONY: run
-run: 
+run:
 	./bin/${APP_NAME}
 
 .PHONY: install
-install: 
+install:
 	go install
 
 .PHONY: clean
-clean: 
-	rm -rf /tmp/msa-analytics.db
+clean:
+	rm -rf /tmp/ogm-analytics.db
 
 .PHONY: call
 call:
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Healthy.Echo '{"msg":"hello"}'
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Record.Wake '{"serialNumber":"Z0000001", "softwareFamily":"Test", "softwareVersion": "1.0.0", "systemFamily": "Alpine", "systemVersion": "3.11", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile"}'
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Query.Agent '{"offset":0, "count":60}'
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Record.Wake '{"serialNumber":"Z0000001", "softwareFamily":"Test", "softwareVersion": "1.1.0", "systemFamily": "Alpine", "systemVersion": "3.12", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile2"}'
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Record.Wake '{"serialNumber":"Z0000002", "softwareFamily":"Test", "softwareVersion": "1.1.0", "systemFamily": "Alpine", "systemVersion": "3.12", "deviceModel":"DELL XPS", "deviceType":"PC", "profile": "myprofile2"}'
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Query.Agent '{"offset":0, "count":60}'
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Record.Activity '{}'
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Record.Activity '{"appID":"tester"}'
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Record.Activity '{"appID":"tester", "deviceID":"Z0000001"}'
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Record.Activity '{"appID":"tester", "deviceID":"Z0000001", "eventID":"ping"}'
-	MICRO_REGISTRY=consul micro call xtc.api.ogm.analytics Query.Event '{"count":90}'
+	gomu --registry=etcd --client=grpc call xtc.ogm.analytics Healthy.Echo '{"msg":"hello"}'
+	# -------------------------------------------------------------------------
+	gomu --registry=etcd --client=grpc call xtc.ogm.analytics Tracker.Record '{"appID":"myapp", "deviceID":"mydevice","userID":"myuser","eventID":"myevent"}'
+	gomu --registry=etcd --client=grpc call xtc.ogm.analytics Tracker.Record '{"appID":"myapp", "deviceID":"mydevice","userID":"myuser","eventID":"myevent", "parameter":"myparameter"}'
+	gomu --registry=etcd --client=grpc call xtc.ogm.analytics Generator.Record '{"appID":"myapp", "deviceID":"mydevice","userID":"myuser","eventID":"myevent"}'
+	gomu --registry=etcd --client=grpc call xtc.ogm.analytics Generator.Record '{"appID":"myapp", "deviceID":"mydevice","userID":"myuser","eventID":"myevent", "eventParameter":"ram"}'
+	gomu --registry=etcd --client=grpc call xtc.ogm.analytics Generator.Record '{"appID":"myapp", "deviceID":"mydevice","userID":"myuser","eventID":"myevent", "eventParameter":"333"}'
+
+
 
 .PHONY: post
 post:
-	curl -X POST -d '{"msg":"hello"}' 127.0.0.1:8080/ogm/analytics/Healthy/Echo
+	curl -X POST -d '{"msg":"hello"}' localhost/ogm/analytics/Healthy/Echo
 
 .PHONY: dist
 dist:
 	mkdir dist
 	tar -zcf dist/${APP_NAME}-${BUILD_VERSION}.tar.gz ./bin/${APP_NAME}
+
+.PHONY: docker
+docker:
+	docker build -t xtechcloud/${APP_NAME}:${BUILD_VERSION} .
+	docker rm -f ${APP_NAME}
+	docker run --restart=always --name=${APP_NAME} --net=host -v /data/${APP_NAME}:/ogm -e MSA_REGISTRY_ADDRESS='localhost:2379' -e MSA_CONFIG_DEFINE='{"source":"file","prefix":"/ogm/config","key":"${APP_NAME}.yaml"}' -d xtechcloud/${APP_NAME}:${BUILD_VERSION}
+	docker logs -f ${APP_NAME}

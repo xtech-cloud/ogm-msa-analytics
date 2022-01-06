@@ -3,16 +3,16 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"ogm-msa-analytics/model"
+	"ogm-analytics/model"
 
-	"github.com/micro/go-micro/v2/logger"
+	"github.com/asim/go-micro/v3/logger"
 	proto "github.com/xtech-cloud/ogm-msp-analytics/proto/analytics"
 )
 
-type Query struct{}
+type Generator struct{}
 
-func (this *Query) Agent(_ctx context.Context, _req *proto.QueryAgentRequest, _rsp *proto.QueryAgentResponse) error {
-	logger.Infof("Received Query.Agent, request is %v", _req)
+func (this *Generator) Agent(_ctx context.Context, _req *proto.GeneratorAgentRequest, _rsp *proto.GeneratorAgentResponse) error {
+	logger.Infof("Received Generator.Agent, request is %v", _req)
 	_rsp.Status = &proto.Status{}
 
 	offset := int64(0)
@@ -53,36 +53,36 @@ func (this *Query) Agent(_ctx context.Context, _req *proto.QueryAgentRequest, _r
 	return nil
 }
 
-func (this *Query) Event(_ctx context.Context, _req *proto.QueryEventRequest, _rsp *proto.QueryEventResponse) error {
-	logger.Infof("Received Query.Event, request is %v", _req)
+func (this *Generator) Record(_ctx context.Context, _req *proto.GeneratorRecordRequest, _rsp *proto.GeneratorRecordResponse) error {
+	logger.Infof("Received Generator.Record, request is %v", _req)
 	_rsp.Status = &proto.Status{}
 
 	dao := model.NewActivityDAO(nil)
 	query := &model.ActivityQuery{
-		Offset:     _req.Offset,
-		Count:      _req.Count,
-		StartTime:  _req.StartTime,
-		EndTime:    _req.EndTime,
-		AppID:      _req.AppID,
-		DeviceID:   _req.DeviceID,
-		UserID:     _req.UserID,
-		EventID:    _req.EventID,
-		EventKey:   _req.EventKey,
-		EventValue: _req.EventValue,
+		Offset:         _req.Offset,
+		Count:          _req.Count,
+		StartTime:      _req.StartTime,
+		EndTime:        _req.EndTime,
+		AppID:          _req.AppID,
+		DeviceID:       _req.DeviceID,
+		UserID:         _req.UserID,
+		EventID:        _req.EventID,
+		EventParameter: _req.EventParameter,
 	}
 	activityAry, err := dao.List(query)
 	if nil != err {
 		return err
 	}
 
-	// TODO use template
-	content, err := json.Marshal(activityAry)
-	if nil != err {
-		_rsp.Status.Code = 2
-		_rsp.Status.Message = err.Error()
-		return nil
+	if len(activityAry) > 0 {
+		// TODO use template
+		content, err := json.Marshal(activityAry)
+		if nil != err {
+			_rsp.Status.Code = 2
+			_rsp.Status.Message = err.Error()
+			return nil
+		}
+		_rsp.Content = model.ToBase64(content)
 	}
-
-	_rsp.Content = string(content)
 	return nil
 }

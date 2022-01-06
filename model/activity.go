@@ -3,14 +3,13 @@ package model
 import "time"
 
 type Activity struct {
-	ID         string `gorm:"primary_key"`
-	CreatedAt  time.Time
-	AppID      string `gorm:"column:app_id;type:char(32)"`
-	DeviceID   string `gorm:"column:device_id;type:char(32)"`
-	UserID     string `gorm:"column:user_id;type:char(32)"`
-	EventID    string `gorm:"column:event_id;type:char(32)"`
-	EventKey   string `gorm:"column:event_key;type:varchar(128)"`
-	EventValue string `gorm:"column:event_value;type:varchar(128)"`
+	ID             string `gorm:"column:id;type:char(32);not null;unique;primary_key"`
+	AppID          string `gorm:"column:app_id;type:char(32)"`
+	DeviceID       string `gorm:"column:device_id;type:char(32)"`
+	UserID         string `gorm:"column:user_id;type:char(32)"`
+	EventID        string `gorm:"column:event_id;type:char(32)"`
+	EventParameter string `gorm:"column:event_parameter;type:varchar(256)"`
+	CreatedAt      time.Time
 }
 
 func (Activity) TableName() string {
@@ -22,16 +21,15 @@ type ActivityDAO struct {
 }
 
 type ActivityQuery struct {
-	StartTime  int64
-	EndTime    int64
-	Offset     int64
-	Count      int64
-	AppID      string
-	DeviceID   string
-	UserID     string
-	EventID    string
-	EventKey   string
-	EventValue string
+	StartTime      int64
+	EndTime        int64
+	Offset         int64
+	Count          int64
+	AppID          string
+	DeviceID       string
+	UserID         string
+	EventID        string
+	EventParameter string
 }
 
 func NewActivityDAO(_conn *Conn) *ActivityDAO {
@@ -62,11 +60,8 @@ func (this *ActivityDAO) List(_query *ActivityQuery) ([]*Activity, error) {
 	if "" != _query.EventID {
 		db = db.Where("event_id = ?", _query.EventID)
 	}
-	if "" != _query.EventKey {
-		db = db.Where("event_key = ?", _query.EventKey)
-	}
-	if "" != _query.EventValue {
-		db = db.Where("event_value = ?", _query.EventValue)
+	if "" != _query.EventParameter {
+		db = db.Where("event_parameter LIKE ?", "%"+_query.EventParameter+"%")
 	}
 	if _query.Offset > 0 {
 		db = db.Offset(int(_query.Offset))

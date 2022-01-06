@@ -6,9 +6,7 @@ import (
 )
 
 type Agent struct {
-	ID              string `gorm:"primary_key"`
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	ID              string `gorm:"column:id;type:char(32);not null;unique;primary_key"`
 	SerialNumber    string `gorm:"column:serial_number;type:varchar(128);not null;unique"`
 	SoftwareFamily  string `gorm:"column:software_family;type:varchar(128);not null"`
 	SoftwareVersion string `gorm:"column:software_version;type:varchar(128)"`
@@ -17,6 +15,8 @@ type Agent struct {
 	DeviceModel     string `gorm:"column:device_model;type:varchar(128)"`
 	DeviceType      string `gorm:"column:device_type;type:varchar(128)"`
 	Profile         string `gorm:"column:profile;type:TEXT"`
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 func (Agent) TableName() string {

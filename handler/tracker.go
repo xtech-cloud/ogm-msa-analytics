@@ -3,16 +3,16 @@ package handler
 import (
 	"context"
 	"fmt"
-	"ogm-msa-analytics/model"
+	"ogm-analytics/model"
 
-	"github.com/micro/go-micro/v2/logger"
+	"github.com/asim/go-micro/v3/logger"
 	proto "github.com/xtech-cloud/ogm-msp-analytics/proto/analytics"
 )
 
-type Record struct{}
+type Tracker struct{}
 
-func (this *Record) Wake(_ctx context.Context, _req *proto.Agent, _rsp *proto.BlankResponse) error {
-	logger.Infof("Received Record.Wake, request is %v", _req)
+func (this *Tracker) Wake(_ctx context.Context, _req *proto.Agent, _rsp *proto.BlankResponse) error {
+	logger.Infof("Received Tracker.Wake, request is %v", _req)
 	_rsp.Status = &proto.Status{}
 	if "" == _req.SerialNumber {
 		_rsp.Status.Code = 1
@@ -45,8 +45,8 @@ func (this *Record) Wake(_ctx context.Context, _req *proto.Agent, _rsp *proto.Bl
 	return dao.Upsert(&agent)
 }
 
-func (this *Record) Activity(_ctx context.Context, _req *proto.RecordActivityRequest, _rsp *proto.BlankResponse) error {
-	logger.Infof("Received Record.Activity, request is %v", _req)
+func (this *Tracker) Record(_ctx context.Context, _req *proto.TrackerRecordRequest, _rsp *proto.BlankResponse) error {
+	logger.Infof("Received Tracker.Record, request is %v", _req)
 	_rsp.Status = &proto.Status{}
 	if "" == _req.AppID {
 		_rsp.Status.Code = 1
@@ -70,28 +70,14 @@ func (this *Record) Activity(_ctx context.Context, _req *proto.RecordActivityReq
 
 	uid := model.NewUUID()
 
-	if len(_req.Parameter) > 0 {
-		for k, v := range _req.Parameter {
-			activity := &model.Activity{
-				ID:         uid,
-				AppID:      _req.AppID,
-				DeviceID:   _req.DeviceID,
-				UserID:     _req.UserID,
-				EventID:    _req.EventID,
-				EventKey:   k,
-				EventValue: v,
-			}
-			dao.Insert(activity)
-		}
-	} else {
-		activity := &model.Activity{
-			ID:       uid,
-			AppID:    _req.AppID,
-			DeviceID: _req.DeviceID,
-			UserID:   _req.UserID,
-			EventID:  _req.EventID,
-		}
-		dao.Insert(activity)
+	activity := &model.Activity{
+		ID:             uid,
+		AppID:          _req.AppID,
+		DeviceID:       _req.DeviceID,
+		UserID:         _req.UserID,
+		EventID:        _req.EventID,
+		EventParameter: _req.Parameter,
 	}
+	dao.Insert(activity)
 	return nil
 }

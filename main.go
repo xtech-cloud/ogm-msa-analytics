@@ -4,25 +4,28 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"io"
-	"ogm-msa-analytics/config"
-	"ogm-msa-analytics/handler"
-	"ogm-msa-analytics/model"
+	"ogm-analytics/config"
+	"ogm-analytics/handler"
+	"ogm-analytics/model"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/micro/go-micro/v2"
-	"github.com/micro/go-micro/v2/logger"
+	"github.com/asim/go-micro/v3"
+	"github.com/asim/go-micro/v3/logger"
+	"github.com/asim/go-micro/plugins/server/grpc/v3"
 	proto "github.com/xtech-cloud/ogm-msp-analytics/proto/analytics"
 )
 
 func main() {
 	config.Setup()
 	model.Setup()
+    defer model.Cancel()
 	model.AutoMigrateDatabase()
 
 	// New Service
 	service := micro.NewService(
+        micro.Server(grpc.NewServer()),
 		micro.Name(config.Schema.Service.Name),
 		micro.Version(BuildVersion),
 		micro.RegisterTTL(time.Second*time.Duration(config.Schema.Service.TTL)),
@@ -35,8 +38,8 @@ func main() {
 
 	// Register Handler
 	proto.RegisterHealthyHandler(service.Server(), new(handler.Healthy))
-	proto.RegisterRecordHandler(service.Server(), new(handler.Record))
-	proto.RegisterQueryHandler(service.Server(), new(handler.Query))
+	proto.RegisterTrackerHandler(service.Server(), new(handler.Tracker))
+	proto.RegisterGeneratorHandler(service.Server(), new(handler.Generator))
 
 	app, _ := filepath.Abs(os.Args[0])
 
